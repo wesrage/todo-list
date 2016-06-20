@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Todo List</title>
+  <script src="https://fb.me/react-15.1.0.js"></script>
+  <script src="https://fb.me/react-dom-15.1.0.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    var TodoApp = React.createClass({
+      getInitialState: function() {
+        return {
+          todos: [],
+          filter: 'All'
+        };
+      },
+      addTodo: function(text) {
+        this.setState({
+          todos: this.state.todos.concat({
+            text: text,
+            completed: false
+          })
+        });
+      },
+      toggleTodo: function(index) {
+        var todos = [].concat(this.state.todos);
+        todos[index].completed = !todos[index].completed;
+        this.setState({
+          todos: todos
+        });
+      },
+      setVisibilityFilter: function(filter) {
+        this.setState({ filter: filter });
+      },
+      getVisibleTodos: function() {
+        switch (this.state.filter) {
+        case 'Active':
+          return this.state.todos.filter(function(todo) {
+            return !todo.completed;
+          });
+        case 'Completed':
+          return this.state.todos.filter(function(todo) {
+            return todo.completed;
+          });
+        default:
+          return this.state.todos;
+        }
+      },
+      render: function() {
+        return (
+          React.DOM.div({},
+            React.createElement(TodoInput, { onAddTodo: this.addTodo }),
+            React.createElement(TodoList, {
+              todos: this.getVisibleTodos(),
+              onToggleTodo: this.toggleTodo
+            }),
+            React.createElement(VisibilityFilters, {
+              activeFilter: this.state.filter,
+              onSetFilter: this.setVisibilityFilter
+            })
+          )
+        );
+      }
+    });
+
+    var TodoInput = React.createClass({
+      addTodo: function() {
+        this.props.onAddTodo(this.refs.input.value);
+        this.refs.input.value = '';
+        this.refs.input.focus();
+      },
+      render: function() {
+        return (
+          React.DOM.div({},
+            React.DOM.input({ ref: 'input '}),
+            React.DOM.button({ onClick: this.addTodo }, 'Add Todo')
+          )
+        );
+      }
+    });
+
+    var TodoList = React.createClass({
+      render: function() {
+        var onToggleTodo = this.props.onToggleTodo;
+        return (
+          React.DOM.ul({},
+            this.props.todos.map(function(todo, index) {
+              return React.createElement(TodoItem, {
+                key: index,
+                index: index,
+                todo: todo,
+                onToggle: onToggleTodo
+              });
+            })
+          )
+        );
+      }
+    });
+
+    var TodoItem = React.createClass({
+      toggle: function() {
+        this.props.onToggle(this.props.index);
+      },
+      render: function() {
+        var style = (this.props.todo.completed)
+          ? { textDecoration: 'line-through' }
+          : {};
+        return (
+          React.DOM.li({
+            style: style,
+            onClick: this.toggle
+          }, this.props.todo.text);
+        );
+      }
+    });
+
+    var VisibilityFilters = React.createClass({
+      setFilter(text) {
+        var onSetFilter = this.props.onSetFilter;
+        return function() {
+          onSetFilter(text);
+        };
+      },
+      renderButton: function(text) {
+        return (
+          React.DOM.button({ onClick: this.setFilter(text)}, text);
+        );
+      },
+      render: function() {
+        return (
+          React.DOM.div({},
+            this.renderButton('All'),
+            this.renderButton('Active'),
+            this.renderButton('Completed')
+          )
+        );
+      }
+    });
+
+    ReactDOM.render(
+      React.createElement(TodoApp),
+      document.getElementById('root')
+    );
+  </script>
+</body>
+</html>
